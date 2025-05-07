@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 import { Plus, Check, Sparkles } from 'lucide-react-native';
-
+import { Task } from '../../types/task';
 import { useTaskStore } from '../../store/taskStore';
 import { useHabitStore } from '../../store/habitStore';
 import { usePomodoroStore } from '../../store/pomodoroStore';
@@ -21,52 +27,56 @@ import { FONTS, SPACING } from '../../constants/Theme';
 
 export default function Dashboard() {
   const navigation = useNavigation();
-  
+
   // Sample state for expanded tasks
-  const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>({});
+  const [expandedTasks, setExpandedTasks] = useState<Record<string, boolean>>(
+    {}
+  );
   const [showAISuggestion, setShowAISuggestion] = useState(true);
-  
+
   // Get tasks and habits from store
-  const { tasks, toggleTaskCompletion, toggleSubTaskCompletion } = useTaskStore();
+  const { tasks, toggleTaskCompletion, toggleSubTaskCompletion } =
+    useTaskStore();
   const { habits } = useHabitStore();
   const { getCompletedSessionsCount, getTotalFocusTime } = usePomodoroStore();
-  
+
   // Toggle task expansion
   const handleToggleExpand = (taskId: string) => {
-    setExpandedTasks(prev => ({
+    setExpandedTasks((prev) => ({
       ...prev,
       [taskId]: !prev[taskId],
     }));
   };
-  
+
   // Process tasks for dashboard
-  const upcomingTasks = tasks
-    .filter(task => !task.completed && task.dueDate)
+  const upcomingTasks: Task[] = tasks
+    .filter((task) => !task.completed && task.dueDate)
     .sort((a, b) => {
       const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
       const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
       return dateA - dateB;
     })
     .slice(0, 3);
-  
+
   // Get top habits
   const topHabits = habits
     .sort((a, b) => b.currentStreak - a.currentStreak)
     .slice(0, 3);
-  
+
   // AI suggestion text (simulated)
-  const aiSuggestion = "Based on your completed tasks, I suggest creating a 'Weekly Planning' habit every Sunday evening to organize your upcoming week.";
-  
+  const aiSuggestion =
+    "Based on your completed tasks, I suggest creating a 'Weekly Planning' habit every Sunday evening to organize your upcoming week.";
+
   // Handle voice input
   const handleVoiceInput = (text: string) => {
-    console.log("Voice input:", text);
+    console.log('Voice input:', text);
     // In a real app, this would parse the input and create tasks/habits
   };
-  
+
   return (
     <View style={styles.container}>
       <AnimatedBackground />
-      
+
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -83,24 +93,34 @@ export default function Dashboard() {
               })}
             </Text>
           </View>
-          
+
           {/* Stats section */}
           <View style={styles.statsContainer}>
             <GlassmorphicCard style={styles.statCard}>
               <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: Colors.light.primary[50] }]}>
+                <View
+                  style={[
+                    styles.statIconContainer,
+                    { backgroundColor: Colors.light.primary[50] },
+                  ]}
+                >
                   <Check size={18} color={Colors.light.primary[400]} />
                 </View>
                 <Text style={styles.statValue}>
-                  {tasks.filter(task => task.completed).length}
+                  {tasks.filter((task) => task.completed).length}
                 </Text>
                 <Text style={styles.statLabel}>Tasks Done</Text>
               </View>
             </GlassmorphicCard>
-            
+
             <GlassmorphicCard style={styles.statCard}>
               <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: Colors.light.secondary[50] }]}>
+                <View
+                  style={[
+                    styles.statIconContainer,
+                    { backgroundColor: Colors.light.secondary[50] },
+                  ]}
+                >
                   <Sparkles size={18} color={Colors.light.secondary[400]} />
                 </View>
                 <Text style={styles.statValue}>
@@ -109,20 +129,23 @@ export default function Dashboard() {
                 <Text style={styles.statLabel}>Focus Sessions</Text>
               </View>
             </GlassmorphicCard>
-            
+
             <GlassmorphicCard style={styles.statCard}>
               <View style={styles.statItem}>
-                <View style={[styles.statIconContainer, { backgroundColor: Colors.light.accent[50] }]}>
+                <View
+                  style={[
+                    styles.statIconContainer,
+                    { backgroundColor: Colors.light.accent[50] },
+                  ]}
+                >
                   <Clock size={18} color={Colors.light.accent[400]} />
                 </View>
-                <Text style={styles.statValue}>
-                  {getTotalFocusTime()}
-                </Text>
+                <Text style={styles.statValue}>{getTotalFocusTime()}</Text>
                 <Text style={styles.statLabel}>Focus Minutes</Text>
               </View>
             </GlassmorphicCard>
           </View>
-          
+
           {/* AI Suggestion */}
           {showAISuggestion && (
             <AISuggestionBanner
@@ -134,21 +157,21 @@ export default function Dashboard() {
               onDismiss={() => setShowAISuggestion(false)}
             />
           )}
-          
+
           {/* Upcoming Tasks */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Upcoming Tasks</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => navigation.navigate('tasks' as never)}
                 style={styles.seeAllButton}
               >
                 <Text style={styles.seeAllText}>See All</Text>
               </TouchableOpacity>
             </View>
-            
+
             {upcomingTasks.length > 0 ? (
-              upcomingTasks.map(task => (
+              upcomingTasks.map((task) => (
                 <TaskItem
                   key={task.id}
                   task={task}
@@ -171,7 +194,7 @@ export default function Dashboard() {
               </GlassmorphicCard>
             )}
           </View>
-          
+
           {/* Habits Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -180,8 +203,8 @@ export default function Dashboard() {
                 <Text style={styles.seeAllText}>See All</Text>
               </TouchableOpacity>
             </View>
-            
-            {topHabits.map(habit => (
+
+            {topHabits.map((habit) => (
               <HabitStreak
                 key={habit.id}
                 title={habit.title}
@@ -190,7 +213,7 @@ export default function Dashboard() {
                 color={habit.color}
               />
             ))}
-            
+
             {/* Heatmap */}
             {habits.length > 0 && (
               <Heatmap
@@ -201,7 +224,7 @@ export default function Dashboard() {
             )}
           </View>
         </ScrollView>
-        
+
         {/* Voice Button */}
         <View style={styles.voiceButtonContainer}>
           <VoiceButton onVoiceInput={handleVoiceInput} />
